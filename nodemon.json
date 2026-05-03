@@ -1,0 +1,12 @@
+{
+  "ignore": [
+    "data/*",
+    "client/*",
+    "node_modules/*",
+    "*.db",
+    "*.db-journal",
+    "*.db-wal"
+  ],
+  "ext": "js,json",
+  "delay": "1000"
+}

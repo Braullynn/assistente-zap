@@ -1,0 +1,34 @@
+# Dependências
+node_modules/
+client/node_modules/
+
+# Configurações Sensíveis
+.env
+
+# Sessão do WhatsApp (Contém dados de login)
+.wwebjs_auth/
+.wwebjs_cache/
+data/session/
+
+# Banco de Dados Local
+data/*.db
+data/*.sqlite
+data/*.sqlite-journal
+assistant.db
+
+# Pastas de Testes e Rascunhos
+tests/
+ideias.txt
+problemas\ e\ soluç*es.md
+
+# Build do Frontend
+client/dist/
+
+# Logs e Sistema
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
