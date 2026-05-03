@@ -24,10 +24,6 @@ const schedulerService = {
                             if (success) {
                                 ReminderModel.deleteById(reminder.id);
                                 console.log(chalk.green(`✅ [SCHEDULER] Lembrete #${reminder.id} enviado e removido.`));
-                                
-                                // SALVA CÓPIA NA MEMÓRIA PARA O CHAT WEB VER
-                                const MessageModel = require('../models/messageModel');
-                                MessageModel.create(reminder.user_id, 'model', message);
                             } else {
                                 console.log(chalk.red(`❌ [SCHEDULER] Falha ao enviar lembrete #${reminder.id}. Mantendo no banco para nova tentativa.`));
                             }

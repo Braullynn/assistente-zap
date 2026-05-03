@@ -109,6 +109,8 @@ const whatsappService = {
                 sentByBot.add(aiResult.message);
 
                 // 8. Responder
+                const aiSource = aiResult.source || 'IA';
+                console.log(chalk.magenta(`[LAURA (${aiSource})]: `) + aiResult.message);
                 await msg.reply(aiResult.message);
 
                 // Timeout de segurança para limpar o cache caso a mensagem demore ou falhe no socket

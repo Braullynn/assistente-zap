@@ -20,6 +20,7 @@ assistant.db
 tests/
 ideias.txt
 problemas\ e\ soluç*es.md
+.ai_rules.md
 
 # Build do Frontend
 client/dist/

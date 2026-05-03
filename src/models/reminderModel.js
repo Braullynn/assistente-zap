@@ -19,7 +19,9 @@ const ReminderModel = {
     },
 
     getPendingReminders: () => {
-        const now = new Date().toISOString();
+        // Gera o horário atual no fuso de Brasília, formatado para ISO para comparar com o banco
+        const now = new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T');
+        
         // Lembretes onde a data_hora já passou ou é agora
         return db.prepare('SELECT c.*, u.telefone, u.nome FROM compromissos c JOIN users u ON c.user_id = u.id WHERE c.data_hora <= ?').all(now);
     },
