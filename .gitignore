@@ -18,6 +18,7 @@ assistant.db
 
 # Pastas de Testes e Rascunhos
 tests/
+info/
 ideias.txt
 problemas\ e\ soluç*es.md
 .ai_rules.md

@@ -70,6 +70,7 @@ function App() {
       setError('');
       setFormData({ nome: '', telefone: '', senha: '' });
       alert('Usuário cadastrado!');
+      fetchUsers();
     } catch (err) {
       setError(err.response?.data?.error || 'Erro ao cadastrar');
     }
@@ -121,13 +122,7 @@ function App() {
       <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <div className="glass fade-in" style={{ padding: '3rem', width: '100%', maxWidth: '400px' }}>
           <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>Laura AI</h1>
-          <form onSubmit={isRegistering ? handleRegister : handleLogin}>
-            {isRegistering && (
-              <div className="input-group">
-                <label>Nome</label>
-                <input type="text" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} required />
-              </div>
-            )}
+          <form onSubmit={handleLogin}>
             <div className="input-group">
               <label>Telefone</label>
               <input type="text" placeholder="55119..." value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} required />
@@ -138,12 +133,9 @@ function App() {
             </div>
             {error && <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>}
             <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-              {isRegistering ? 'Criar Conta' : 'Entrar'}
+              Entrar
             </button>
           </form>
-          <button onClick={() => setIsRegistering(!isRegistering)} style={{ background: 'none', border: 'none', color: 'var(--primary)', marginTop: '1.5rem', width: '100%', cursor: 'pointer' }}>
-            {isRegistering ? 'Já tenho conta' : 'Cadastre-se'}
-          </button>
         </div>
       </div>
     );
@@ -168,7 +160,38 @@ function App() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
         <div className="glass" style={{ padding: '2rem' }}>
-          <h2>Usuários Ativos</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2>Usuários Ativos</h2>
+            <button onClick={() => setIsRegistering(!isRegistering)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <UserPlus size={18} /> Novo Usuário
+            </button>
+          </div>
+
+          {isRegistering && (
+            <div style={{ background: 'var(--card)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem' }}>
+              <h3 style={{ marginBottom: '1rem' }}>Cadastrar Novo Usuário</h3>
+              <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="input-group" style={{ marginBottom: 0 }}>
+                  <label>Nome</label>
+                  <input type="text" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} required />
+                </div>
+                <div className="input-group" style={{ marginBottom: 0 }}>
+                  <label>Telefone</label>
+                  <input type="text" placeholder="55119..." value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} required />
+                </div>
+                <div className="input-group" style={{ marginBottom: 0 }}>
+                  <label>Senha</label>
+                  <input type="password" value={formData.senha} onChange={(e) => setFormData({ ...formData, senha: e.target.value })} required />
+                </div>
+                {error && <p style={{ color: '#ef4444', margin: 0 }}>{error}</p>}
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                  <button type="button" onClick={() => {setIsRegistering(false); setError('');}} className="btn glass" style={{ flex: 1 }}>Cancelar</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Salvar</button>
+                </div>
+              </form>
+            </div>
+          )}
+
           <table>
             <thead>
               <tr><th>Nome</th><th>Telefone</th><th>Ações</th></tr>
