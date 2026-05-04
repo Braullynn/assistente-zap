@@ -179,10 +179,6 @@ function App() {
                   <label>Telefone</label>
                   <input type="text" placeholder="55119..." value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} required />
                 </div>
-                <div className="input-group" style={{ marginBottom: 0 }}>
-                  <label>Senha</label>
-                  <input type="password" value={formData.senha} onChange={(e) => setFormData({ ...formData, senha: e.target.value })} required />
-                </div>
                 {error && <p style={{ color: '#ef4444', margin: 0 }}>{error}</p>}
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                   <button type="button" onClick={() => {setIsRegistering(false); setError('');}} className="btn glass" style={{ flex: 1 }}>Cancelar</button>

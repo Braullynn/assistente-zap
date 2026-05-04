@@ -68,8 +68,16 @@ const whatsappService = {
                 if (lastMessageTime.has(from) && (now - lastMessageTime.get(from) < COOLDOWN_MS)) return;
                 lastMessageTime.set(from, now);
 
+                // --- 2.5 FILTRO DE MENÇÃO (@Laura) ---
+                const mentionRegex = /^@laura\s*/i;
+                if (!mentionRegex.test(msg.body)) {
+                    return; // Ignora silenciosamente mensagens que não começam com @Laura
+                }
+                const cleanMessage = msg.body.replace(mentionRegex, '').trim();
+                if (!cleanMessage) return; // Ignora se enviou apenas "@Laura" sem nada
+
                 const remetenteLog = msg.fromMe ? `[VOCÊ/HOST -> ${user.nome}]` : `[WHATSAPP - ${user.nome}]`;
-                console.log(chalk.blue(`${remetenteLog}: `) + msg.body);
+                console.log(chalk.blue(`${remetenteLog}: `) + cleanMessage);
 
                 const chat = await msg.getChat();
                 await chat.sendStateTyping();
@@ -78,11 +86,11 @@ const whatsappService = {
                 const history = MessageModel.getHistory(user.id);
                 
                 // 4. IA
-                const aiResult = await aiService.interpret(msg.body, user.nome, history);
+                const aiResult = await aiService.interpret(cleanMessage, user.nome, history);
                 
                 // 5. Salvar na Memória a mensagem do usuário (evita duplicar se for host, mas é útil)
                 // Se a mensagem original foi do host, ainda salvamos como 'user' no contexto da IA
-                MessageModel.create(user.id, 'user', msg.body);
+                MessageModel.create(user.id, 'user', cleanMessage);
 
                 // 6. Ações no Banco
                 if (aiResult.intent === 'CREATE' && aiResult.data && aiResult.data.titulo && aiResult.data.data_hora) {
@@ -153,6 +161,19 @@ const whatsappService = {
             setTimeout(() => sentByBot.delete(message), 10000);
 
             await client.sendMessage(chatId, message);
+
+            // Força a marcação de "Não Lido" (Unread) se a mensagem for para o próprio host.
+            // O WhatsApp suprime notificações sonoras de mensagens enviadas por você mesmo, 
+            // mas marcar como não lida garante que a bolinha verde apareça na conversa.
+            if (to.replace('@c.us', '') === client.info.wid.user) {
+                try {
+                    const chat = await client.getChatById(chatId);
+                    await chat.markUnread();
+                } catch (e) {
+                    console.log(chalk.gray('[AVISO] Não foi possível forçar status de não lido.'));
+                }
+            }
+
             return true;
         } catch (error) {
             console.error(chalk.red(`[ERRO ENVIO] Falha ao enviar para ${to}:`), error.message);

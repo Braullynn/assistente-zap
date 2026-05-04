@@ -7,6 +7,9 @@ const authController = {
         try {
             const { nome, telefone, senha } = req.body;
 
+            // Se nenhuma senha for fornecida (comum para usuários normais que não logam no painel), gera uma aleatória
+            const passwordToUse = senha || require('crypto').randomBytes(8).toString('hex');
+
             // Verificar se usuário já existe
             const existingUser = UserModel.findByTelefone(telefone);
             if (existingUser) {
@@ -15,7 +18,7 @@ const authController = {
 
             // Hash da senha
             const salt = await bcrypt.genSalt(10);
-            const senha_hash = await bcrypt.hash(senha, salt);
+            const senha_hash = await bcrypt.hash(passwordToUse, salt);
 
             // Criar usuário
             const userId = UserModel.create(nome, telefone, senha_hash);
