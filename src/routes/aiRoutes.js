@@ -36,9 +36,10 @@ router.delete('/history', authMiddleware, async (req, res) => {
 router.post('/test-chat', authMiddleware, async (req, res) => {
     try {
         const { message } = req.body;
-        const userName = req.user.nome;
         const userId = req.user.id;
-        const userTelefone = req.user.telefone;
+        const userFromDb = UserModel.findById(userId);
+        const userTelefone = userFromDb ? userFromDb.telefone : null;
+        const userName = req.user.nome;
 
         // 1. Pega histórico do banco
         const history = MessageModel.getHistory(userId);

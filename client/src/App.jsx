@@ -190,13 +190,12 @@ function App() {
 
           <table>
             <thead>
-              <tr><th>Nome</th><th>Telefone</th><th>Ações</th></tr>
+              <tr><th>Nome</th><th>Ações</th></tr>
             </thead>
             <tbody>
               {users.map(user => (
                 <tr key={user.id}>
                   <td>{user.nome}</td>
-                  <td>{user.telefone}</td>
                   <td>
                     <button onClick={() => handleDeleteUser(user.id)} style={{ color: '#ef4444', background: 'none', border: 'none' }}>
                       <Trash2 size={18} />

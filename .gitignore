@@ -22,6 +22,7 @@ info/
 ideias.txt
 problemas\ e\ soluç*es.md
 .ai_rules.md
+security_audit_skill.md
 
 # Build do Frontend
 client/dist/

@@ -5,9 +5,15 @@ const UserModel = require('../models/userModel');
 const authController = {
     register: async (req, res) => {
         try {
-            const { nome, telefone, senha } = req.body;
+            const { senha } = req.body;
+            const nome = req.body.nome ? req.body.nome.replace(/[<>]/g, '').trim() : '';
+            const telefone = req.body.telefone ? req.body.telefone.replace(/[<>]/g, '').trim() : '';
 
-            // Se nenhuma senha for fornecida (comum para usuários normais que não logam no painel), gera uma aleatória
+            if (!nome || !telefone) {
+                return res.status(400).json({ error: 'Nome e telefone são obrigatórios.' });
+            }
+
+            // Se nenhuma senha for fornecida, gera uma aleatória
             const passwordToUse = senha || require('crypto').randomBytes(8).toString('hex');
 
             // Verificar se usuário já existe
@@ -25,7 +31,8 @@ const authController = {
 
             // Tentar enviar mensagem de boas-vindas (assíncrono)
             const whatsappService = require('../services/whatsappService');
-            whatsappService.sendWelcomeMessage(nome, telefone).catch(err => console.log('Erro ao enviar boas-vindas:', err.message));
+            const welcomeMsg = `Olá ${nome}! 👋 Eu sou a Laura, sua assistente virtual. Me mande uma mensagem começando com @laura e ficarei feliz em ajudar!`;
+            whatsappService.sendMessage(telefone, welcomeMsg).catch(err => console.log('Erro ao enviar boas-vindas:', err.message));
 
             res.status(201).json({ message: 'Usuário cadastrado com sucesso!', userId });
         } catch (error) {
@@ -49,16 +56,16 @@ const authController = {
                 return res.status(400).json({ error: 'Telefone ou senha inválidos.' });
             }
 
-            // Gerar Token JWT
+            // Gerar Token JWT (Removido telefone do payload por segurança)
             const token = jwt.sign(
-                { id: user.id, nome: user.nome, telefone: user.telefone },
-                process.env.JWT_SECRET || 'secret',
+                { id: user.id, nome: user.nome },
+                process.env.JWT_SECRET,
                 { expiresIn: '1d' }
             );
 
             res.json({
                 token,
-                user: { id: user.id, nome: user.nome, telefone: user.telefone }
+                user: { id: user.id, nome: user.nome }
             });
         } catch (error) {
             res.status(500).json({ error: 'Erro no login: ' + error.message });

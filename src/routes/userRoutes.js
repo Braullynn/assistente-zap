@@ -13,9 +13,12 @@ router.get('/', authMiddleware, (req, res) => {
     }
 });
 
-// Deletar usuário (Protegido)
+// Deletar usuário (Protegido contra IDOR)
 router.delete('/:id', authMiddleware, (req, res) => {
     try {
+        if (String(req.user.id) !== String(req.params.id)) {
+            return res.status(403).json({ error: 'Você só pode deletar sua própria conta.' });
+        }
         UserModel.delete(req.params.id);
         res.json({ message: 'Usuário deletado com sucesso.' });
     } catch (error) {
@@ -23,10 +26,15 @@ router.delete('/:id', authMiddleware, (req, res) => {
     }
 });
 
-// Atualizar usuário (Protegido)
+// Atualizar usuário (Protegido contra IDOR e XSS)
 router.put('/:id', authMiddleware, (req, res) => {
     try {
-        const { nome, telefone } = req.body;
+        if (String(req.user.id) !== String(req.params.id)) {
+            return res.status(403).json({ error: 'Você só pode editar sua própria conta.' });
+        }
+        const nome = req.body.nome ? req.body.nome.replace(/[<>]/g, '').trim() : undefined;
+        const telefone = req.body.telefone ? req.body.telefone.replace(/[<>]/g, '').trim() : undefined;
+        
         UserModel.update(req.params.id, nome, telefone);
         res.json({ message: 'Usuário atualizado com sucesso.' });
     } catch (error) {

@@ -14,7 +14,14 @@ const aiService = {
 
         // Sincronização de Horário (Padrão Brasil)
         const now = new Date();
-        const localTime = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const brParts = new Intl.DateTimeFormat('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        }).formatToParts(now);
+        const part = (type) => brParts.find(p => p.type === type).value;
+        const localTime = `${part('day')}/${part('month')}/${part('year')} ${part('hour')}:${part('minute')}:${part('second')}`;
 
         // Montagem do Contexto Real da Agenda
         let agendaContext = "O usuário não possui lembretes ativos no banco de dados no momento.";
@@ -46,7 +53,10 @@ const aiService = {
 
         ${agendaContext}
 
-        IMPORTANTE: A data/hora local agora é ${localTime}. Use isso como referência.`;
+        IMPORTANTE: A data/hora local agora é ${localTime} (Fuso de Brasília).
+        - Se o usuário disser "em 5 minutos", calcule o horário somando ao horário atual acima.
+        - Retorne o campo "data_hora" SEMPRE no formato "YYYY-MM-DDTHH:mm:ss" (sem o Z no final).
+        - Use sempre o horário de Brasília como referência absoluta.`;
 
         // 1. TENTA GROQ PRIMEIRO (Atualmente a mais rápida)
         if (process.env.GROQ_API_KEY) {

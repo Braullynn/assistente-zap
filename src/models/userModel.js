@@ -29,7 +29,7 @@ const UserModel = {
     },
 
     listAll: () => {
-        return db.prepare('SELECT id, nome, telefone, criado_em FROM users').all();
+        return db.prepare('SELECT id, nome, criado_em FROM users').all();
     },
 
     delete: (id) => {

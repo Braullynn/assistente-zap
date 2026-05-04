@@ -1,9 +1,12 @@
+process.env.TZ = 'America/Sao_Paulo';
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const initSchema = require('./src/database/schema');
 const schedulerService = require('./src/services/schedulerService');
 const whatsappService = require('./src/services/whatsappService');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,15 +16,28 @@ initSchema();
 schedulerService.init();
 whatsappService.init();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
-
-// CSP Middleware básico para evitar erros no console
-app.use((req, res, next) => {
-    res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:3000;");
-    next();
+// Configuração de Rate Limit (Proteção contra abuso)
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // Limite de 100 req por IP
+    message: { error: 'Muitas requisições vindas deste IP, tente novamente mais tarde.' }
 });
+
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hora
+    max: 10, // Apenas 10 tentativas de login/registro por hora
+    message: { error: 'Limite de tentativas atingido. Tente novamente em uma hora.' }
+});
+
+// Middlewares de Segurança
+app.use(helmet()); // Adiciona headers de segurança automaticamente
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:3000'], // Apenas origens confiáveis
+    credentials: true
+}));
+app.use(express.json({ limit: '1mb' })); // Limita o tamanho do JSON para evitar DoS
+app.use('/api/', limiter); // Aplica rate limit global na API
+app.use('/api/auth', authLimiter); // Aplica rate limit mais rígido na autenticação
 
 // Rotas
 app.use('/api/auth', require('./src/routes/authRoutes'));
