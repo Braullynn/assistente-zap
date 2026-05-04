@@ -76,17 +76,20 @@ const whatsappService = {
                 const cleanMessage = msg.body.replace(mentionRegex, '').trim();
                 if (!cleanMessage) return; // Ignora se enviou apenas "@Laura" sem nada
 
+                const startTime = Date.now(); // Inicia o cronômetro para medir o tempo real até o fim do fluxo
+                
                 const remetenteLog = msg.fromMe ? `[VOCÊ/HOST -> ${user.nome}]` : `[WHATSAPP - ${user.nome}]`;
                 console.log(chalk.blue(`${remetenteLog}: `) + cleanMessage);
 
                 const chat = await msg.getChat();
                 await chat.sendStateTyping();
 
-                // 3. Memória (Histórico)
+                // 3. Memória (Histórico) e Agenda Ativa
                 const history = MessageModel.getHistory(user.id);
+                const activeReminders = ReminderModel.listByUser(user.id);
                 
                 // 4. IA
-                const aiResult = await aiService.interpret(cleanMessage, user.nome, history);
+                const aiResult = await aiService.interpret(cleanMessage, user.nome, history, activeReminders);
                 
                 // 5. Salvar na Memória a mensagem do usuário (evita duplicar se for host, mas é útil)
                 // Se a mensagem original foi do host, ainda salvamos como 'user' no contexto da IA
@@ -118,7 +121,8 @@ const whatsappService = {
 
                 // 8. Responder
                 const aiSource = aiResult.source || 'IA';
-                console.log(chalk.magenta(`[LAURA (${aiSource})]: `) + aiResult.message);
+                const duration = Date.now() - startTime;
+                console.log(chalk.magenta(`[LAURA (${aiSource}) - ${duration}ms]: `) + aiResult.message);
                 await msg.reply(aiResult.message);
 
                 // Timeout de segurança para limpar o cache caso a mensagem demore ou falhe no socket
