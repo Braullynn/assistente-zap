@@ -2,7 +2,7 @@ const db = require('../config/database');
 
 const initSchema = () => {
     // Tabela de Usuários
-    db.prepare(`
+    db.sqlite.prepare(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
@@ -13,7 +13,7 @@ const initSchema = () => {
     `).run();
 
     // Tabela de Compromissos
-    db.exec(`
+    db.sqlite.exec(`
         CREATE TABLE IF NOT EXISTS compromissos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -26,7 +26,7 @@ const initSchema = () => {
     `);
 
     // Tabela de Mensagens (Memória do Chat)
-    db.exec(`
+    db.sqlite.exec(`
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,

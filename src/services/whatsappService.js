@@ -60,7 +60,7 @@ const whatsappService = {
                 }
                 
                 // 1. Verificar se o remetente tem cadastro
-                const user = UserModel.findByTelefone(from);
+                const user = await UserModel.findByTelefone(from);
                 if (!user) return;
 
                 // 2. Anti-Spam
@@ -85,20 +85,20 @@ const whatsappService = {
                 await chat.sendStateTyping();
 
                 // 3. Memória (Histórico) e Agenda Ativa
-                const history = MessageModel.getHistory(user.id);
-                const activeReminders = ReminderModel.listByUser(user.id);
+                const history = await MessageModel.getHistory(user.id);
+                const activeReminders = await ReminderModel.listByUser(user.id);
                 
                 // 4. IA
                 const aiResult = await aiService.interpret(cleanMessage, user.nome, history, activeReminders);
                 
                 // 5. Salvar na Memória a mensagem do usuário (evita duplicar se for host, mas é útil)
                 // Se a mensagem original foi do host, ainda salvamos como 'user' no contexto da IA
-                MessageModel.create(user.id, 'user', cleanMessage);
+                await MessageModel.create(user.id, 'user', cleanMessage);
 
                 // 6. Ações no Banco
                 if (aiResult.intent === 'CREATE' && aiResult.data && aiResult.data.titulo && aiResult.data.data_hora) {
                     try {
-                        ReminderModel.create(user.id, aiResult.data.titulo, aiResult.data.data_hora);
+                        await ReminderModel.create(user.id, aiResult.data.titulo, aiResult.data.data_hora);
                         console.log(chalk.green(`[BANCO] Lembrete criado: ${aiResult.data.titulo}`));
                         
                         // Garante mensagem de sucesso se a IA foi econômica
@@ -110,11 +110,11 @@ const whatsappService = {
                         aiResult.message = "Houve um erro ao salvar seu lembrete. Pode tentar novamente?";
                     }
                 } else if (aiResult.intent === 'DELETE' && aiResult.data && aiResult.data.titulo) {
-                    ReminderModel.deleteByTitle(user.id, aiResult.data.titulo);
+                    await ReminderModel.deleteByTitle(user.id, aiResult.data.titulo);
                 }
 
                 // 7. Salvar Resposta da IA na Memória (após possíveis ajustes de sucesso)
-                MessageModel.create(user.id, 'model', aiResult.message);
+                await MessageModel.create(user.id, 'model', aiResult.message);
 
                 // Adiciona a resposta no cache antes de enviar para não disparar no message_create novamente
                 sentByBot.add(aiResult.message);

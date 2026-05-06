@@ -10,7 +10,7 @@ const schedulerService = {
         // Executa a cada minuto
         cron.schedule('* * * * *', async () => {
             try {
-                const pending = ReminderModel.getPendingReminders();
+                const pending = await ReminderModel.getPendingReminders();
                 
                 if (pending.length > 0) {
                     console.log(`Encontrados ${pending.length} lembretes para disparar.`);
@@ -22,7 +22,7 @@ const schedulerService = {
                             const success = await whatsappService.sendMessage(reminder.telefone, message);
                             
                             if (success) {
-                                ReminderModel.deleteById(reminder.id);
+                                await ReminderModel.deleteById(reminder.id);
                                 console.log(chalk.green(`✅ [SCHEDULER] Lembrete #${reminder.id} enviado e removido.`));
                             } else {
                                 console.log(chalk.red(`❌ [SCHEDULER] Falha ao enviar lembrete #${reminder.id}. Mantendo no banco para nova tentativa.`));

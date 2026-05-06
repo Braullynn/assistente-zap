@@ -17,7 +17,7 @@ const authController = {
             const passwordToUse = senha || require('crypto').randomBytes(8).toString('hex');
 
             // Verificar se usuário já existe
-            const existingUser = UserModel.findByTelefone(telefone);
+            const existingUser = await UserModel.findByTelefone(telefone);
             if (existingUser) {
                 return res.status(400).json({ error: 'Este telefone já está cadastrado.' });
             }
@@ -27,7 +27,7 @@ const authController = {
             const senha_hash = await bcrypt.hash(passwordToUse, salt);
 
             // Criar usuário
-            const userId = UserModel.create(nome, telefone, senha_hash);
+            const userId = await UserModel.create(nome, telefone, senha_hash);
 
             // Tentar enviar mensagem de boas-vindas (assíncrono)
             const whatsappService = require('../services/whatsappService');
@@ -45,7 +45,7 @@ const authController = {
             const { telefone, senha } = req.body;
 
             // Buscar usuário
-            const user = UserModel.findByTelefone(telefone);
+            const user = await UserModel.findByTelefone(telefone);
             if (!user) {
                 return res.status(400).json({ error: 'Telefone ou senha inválidos.' });
             }
