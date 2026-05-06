@@ -4,13 +4,14 @@ const authMiddleware = require('../config/authMiddleware');
 const ReminderModel = require('../models/reminderModel');
 const MessageModel = require('../models/messageModel');
 const whatsappService = require('../services/whatsappService');
+const UserModel = require('../models/userModel');
 const chalk = require('chalk');
 const router = express.Router();
 
 // Rota para buscar histórico de mensagens
 router.get('/history', authMiddleware, async (req, res) => {
     try {
-        const history = MessageModel.getHistory(req.user.id);
+        const history = await MessageModel.getHistory(req.user.id);
         // Formata para o frontend (role e text)
         const formatted = history.map(m => ({
             role: m.role === 'model' ? 'laura' : 'user',
@@ -25,7 +26,7 @@ router.get('/history', authMiddleware, async (req, res) => {
 // Rota para limpar histórico
 router.delete('/history', authMiddleware, async (req, res) => {
     try {
-        MessageModel.clearHistory(req.user.id);
+        await MessageModel.clearHistory(req.user.id);
         res.json({ message: 'Histórico limpo' });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -37,26 +38,26 @@ router.post('/test-chat', authMiddleware, async (req, res) => {
     try {
         const { message } = req.body;
         const userId = req.user.id;
-        const userFromDb = UserModel.findById(userId);
+        const userFromDb = await UserModel.findById(userId);
         const userTelefone = userFromDb ? userFromDb.telefone : null;
         const userName = req.user.nome;
 
         // 1. Pega histórico do banco
-        const history = MessageModel.getHistory(userId);
+        const history = await MessageModel.getHistory(userId);
 
         // 2. Chama a IA com histórico
         const aiResult = await aiService.interpret(message, userName, history);
         
         // 3. Salva a mensagem do usuário
         if (message) {
-            MessageModel.create(userId, 'user', message);
+            await MessageModel.create(userId, 'user', message);
         }
         
         // 4. Executa ações no banco (CREATE/DELETE)
         let successExtra = '';
         if (aiResult.intent === 'CREATE' && aiResult.data && aiResult.data.titulo && aiResult.data.data_hora) {
             try {
-                ReminderModel.create(userId, aiResult.data.titulo, aiResult.data.data_hora);
+                await ReminderModel.create(userId, aiResult.data.titulo, aiResult.data.data_hora);
                 console.log(chalk.green(`[TESTE] Lembrete criado: ${aiResult.data.titulo}`));
                 // Mensagem de sucesso garantida se a IA não gerou uma boa
                 if (!aiResult.message || aiResult.message.includes('{')) {
@@ -70,7 +71,7 @@ router.post('/test-chat', authMiddleware, async (req, res) => {
 
         // 5. Salva a resposta da Laura na memória
         if (aiResult.message) {
-            MessageModel.create(userId, 'model', aiResult.message);
+            await MessageModel.create(userId, 'model', aiResult.message);
         }
 
         // 6. Envia cópia para o WhatsApp (Pedido do Usuário: Poupar API mas enviar cópia)
