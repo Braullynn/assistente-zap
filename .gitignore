@@ -28,6 +28,8 @@ security_audit_skill.md
 client/dist/
 
 # Logs e Sistema
+.agents/
+skills-lock.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
