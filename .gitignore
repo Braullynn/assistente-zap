@@ -12,6 +12,8 @@ data/session/
 
 # Banco de Dados Local
 data/*.db
+data/*.db-shm
+data/*.db-wal
 data/*.sqlite
 data/*.sqlite-journal
 assistant.db
