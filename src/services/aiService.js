@@ -53,8 +53,10 @@ const aiService = {
 
         ${agendaContext}
 
-        IMPORTANTE: A data/hora local agora é ${localTime} (Fuso de Brasília).
-        - Se o usuário disser "em 5 minutos", calcule o horário somando ao horário atual acima.
+        IMPORTANTE SOBRE CÁLCULO DE TEMPO:
+        - A data/hora local ATUAL é RIGOROSAMENTE: ${localTime} (Fuso de Brasília).
+        - ATENÇÃO MÁXIMA: Ignore completamente quaisquer horários mencionados nas mensagens anteriores do histórico! Eles são antigos.
+        - Se o usuário disser "em X minutos", some os minutos EXATAMENTE ao horário ATUAL (${localTime}).
         - Retorne o campo "data_hora" SEMPRE no formato "YYYY-MM-DDTHH:mm:ss" (sem o Z no final).
         - Use sempre o horário de Brasília como referência absoluta.`;
 
