@@ -96,14 +96,43 @@ const whatsappService = {
                 await MessageModel.create(user.id, 'user', cleanMessage);
 
                 // 6. Ações no Banco
-                if (aiResult.intent === 'CREATE' && aiResult.data && aiResult.data.titulo && aiResult.data.data_hora) {
+                if (aiResult.intent === 'CREATE' && aiResult.data && aiResult.data.titulo && (aiResult.data.data_hora || aiResult.data.delta_minutos)) {
                     try {
-                        await ReminderModel.create(user.id, aiResult.data.titulo, aiResult.data.data_hora);
-                        console.log(chalk.green(`[BANCO] Lembrete criado: ${aiResult.data.titulo}`));
+                        let dataHoraToSave = aiResult.data.data_hora;
+                        let isRelative = false;
+                        
+                        if (aiResult.data.delta_minutos) {
+                            isRelative = true;
+                            const agora = new Date();
+                            agora.setMinutes(agora.getMinutes() + aiResult.data.delta_minutos);
+                            
+                            const brParts = new Intl.DateTimeFormat('pt-BR', {
+                                timeZone: 'America/Sao_Paulo',
+                                year: 'numeric', month: '2-digit', day: '2-digit',
+                                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                                hour12: false
+                            }).formatToParts(agora);
+                            const part = (type) => brParts.find(p => p.type === type).value;
+                            dataHoraToSave = `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}:${part('second')}`;
+                        }
+
+                        const reminderId = await ReminderModel.create(user.id, aiResult.data.titulo, dataHoraToSave);
+                        console.log(chalk.green(`[BANCO] Lembrete criado: ${aiResult.data.titulo} para ${dataHoraToSave}`));
+                        
+                        if (isRelative && reminderId) {
+                            const ms = aiResult.data.delta_minutos * 60 * 1000;
+                            const schedulerService = require('./schedulerService');
+                            schedulerService.addTimer({
+                                id: reminderId,
+                                titulo: aiResult.data.titulo,
+                                telefone: user.telefone,
+                                nome: user.nome
+                            }, ms);
+                        }
                         
                         // Garante mensagem de sucesso se a IA foi econômica
                         if (!aiResult.message || aiResult.message.includes('{')) {
-                            aiResult.message = `Tudo certo, ${user.nome}! Lembrete "${aiResult.data.titulo}" agendado para ${new Date(aiResult.data.data_hora).toLocaleString('pt-BR')}. 👍`;
+                            aiResult.message = `Tudo certo, ${user.nome}! Lembrete "${aiResult.data.titulo}" agendado para ${new Date(dataHoraToSave).toLocaleString('pt-BR')}. 👍`;
                         }
                     } catch (dbError) {
                         console.error(chalk.red('[ERRO DB]'), dbError.message);

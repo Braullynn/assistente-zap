@@ -3,9 +3,11 @@ const db = require('../config/database');
 const ReminderModel = {
     create: async (userId, titulo, data_hora) => {
         if (db.mode === 'production') {
-            await db.supabase.from('compromissos').insert([{ user_id: userId, titulo, data_hora }]);
+            const { data, error } = await db.supabase.from('compromissos').insert([{ user_id: userId, titulo, data_hora }]).select();
+            return data && data.length > 0 ? data[0].id : null;
         } else {
-            db.sqlite.prepare('INSERT INTO compromissos (user_id, titulo, data_hora) VALUES (?, ?, ?)').run(userId, titulo, data_hora);
+            const result = db.sqlite.prepare('INSERT INTO compromissos (user_id, titulo, data_hora) VALUES (?, ?, ?)').run(userId, titulo, data_hora);
+            return result.lastInsertRowid;
         }
     },
 

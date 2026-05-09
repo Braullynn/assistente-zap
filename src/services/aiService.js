@@ -36,28 +36,27 @@ const aiService = {
         Estrutura do JSON:
         {
           "intent": "CREATE" | "LIST" | "DELETE" | "UPDATE" | "UNKNOWN",
-          "data": { "titulo": "...", "data_hora": "ISO string" },
+          "data": { "titulo": "...", "data_hora": "ISO string", "delta_minutos": numero_ou_null },
           "message": "Sua resposta amigável para o usuário aqui"
         }
 
         Instruções:
         1. Mantenha um tom prestativo, educado e bacana. Use emojis ocasionalmente.
         2. No campo "message", confirme o que você entendeu e o que vai fazer. Ex: "Claro! Vou te lembrar de comprar pão amanhã às 08:00".
-        3. CREATE: Extraia obrigatoriamente um "titulo" descritivo e uma "data_hora" válida.
-        4. Se faltar informações, use a intenção UNKNOWN e pergunte educadamente no campo "message".
-        5. Ao iniciar uma conversa, apresente sempre seu nome e sua função.
-        6. REGRA DE OURO: Responda SEMPRE com base APENAS na ÚLTIMA mensagem do usuário. 
+        3. CREATE: Extraia obrigatoriamente um "titulo" descritivo e o tempo.
+        4. Se o usuário pedir um lembrete relativo (ex: "em 3 minutos", "daqui a 2 horas"), preencha o campo "delta_minutos" com o total de minutos (ex: 3, 120) e deixe "data_hora" como nulo.
+        5. Se for um lembrete absoluto (ex: "amanhã às 15h"), preencha "data_hora" no formato "YYYY-MM-DDTHH:mm:ss" e deixe "delta_minutos" como nulo.
+        6. Ao iniciar uma conversa, apresente sempre seu nome e sua função.
+        7. REGRA DE OURO: Responda SEMPRE com base APENAS na ÚLTIMA mensagem do usuário. 
         O histórico serve apenas como contexto para a conversa. JAMAIS repita ou recrie 
         agendamentos antigos contidos no histórico sem ordem atual do usuario.
-        7. QUANDO O USUÁRIO PERGUNTAR PELA SUA AGENDA/LEMBRETES: Leia o bloco "AGENDA ATUAL DO USUÁRIO" abaixo e responda baseando-se EXCLUSIVAMENTE nele.
+        8. QUANDO O USUÁRIO PERGUNTAR PELA SUA AGENDA/LEMBRETES: Leia o bloco "AGENDA ATUAL DO USUÁRIO" abaixo e responda baseando-se EXCLUSIVAMENTE nele.
 
         ${agendaContext}
 
         IMPORTANTE SOBRE CÁLCULO DE TEMPO:
         - A data/hora local ATUAL é RIGOROSAMENTE: ${localTime} (Fuso de Brasília).
         - ATENÇÃO MÁXIMA: Ignore completamente quaisquer horários mencionados nas mensagens anteriores do histórico! Eles são antigos.
-        - Se o usuário disser "em X minutos", some os minutos EXATAMENTE ao horário ATUAL (${localTime}).
-        - Retorne o campo "data_hora" SEMPRE no formato "YYYY-MM-DDTHH:mm:ss" (sem o Z no final).
         - Use sempre o horário de Brasília como referência absoluta.`;
 
         // 1. TENTA GROQ PRIMEIRO (Atualmente a mais rápida)

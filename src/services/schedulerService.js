@@ -3,7 +3,28 @@ const chalk = require('chalk');
 const ReminderModel = require('../models/reminderModel');
 const whatsappService = require('./whatsappService');
 
+const inMemoryTimers = new Set();
+
 const schedulerService = {
+    addTimer: (reminder, ms) => {
+        inMemoryTimers.add(reminder.id);
+        setTimeout(async () => {
+            if (!inMemoryTimers.has(reminder.id)) return;
+            inMemoryTimers.delete(reminder.id);
+            
+            const message = `⏰ *LEMBRETE DA LAURA* ⏰\n\nOlá ${reminder.nome}, você me pediu para te lembrar disso agora:\n👉 *${reminder.titulo}*`;
+            try {
+                await ReminderModel.deleteById(reminder.id);
+                const success = await whatsappService.sendMessage(reminder.telefone, message);
+                if (success) {
+                    console.log(chalk.green(`✅ [TIMER] Lembrete #${reminder.id} enviado e removido.`));
+                }
+            } catch (err) {
+                console.error(`Falha no timer do lembrete #${reminder.id}:`, err.message);
+            }
+        }, ms);
+    },
+
     init: () => {
         console.log(chalk.cyan('⏰ [SCHEDULER] Motor de lembretes ativo (checagem 1x/min)'));
         
@@ -13,9 +34,15 @@ const schedulerService = {
                 const pending = await ReminderModel.getPendingReminders();
                 
                 if (pending.length > 0) {
-                    console.log(`Encontrados ${pending.length} lembretes para disparar.`);
+                    let enviouAlgo = false;
                     
                     for (const reminder of pending) {
+                        // Ignora se tem um timer em memória de alta precisão cuidando desse lembrete
+                        if (inMemoryTimers.has(reminder.id)) {
+                            continue;
+                        }
+                        
+                        enviouAlgo = true;
                         const message = `⏰ *LEMBRETE DA LAURA* ⏰\n\nOlá ${reminder.nome}, você me pediu para te lembrar disso agora:\n👉 *${reminder.titulo}*`;
                         
                         try {
@@ -23,15 +50,17 @@ const schedulerService = {
                             
                             if (success) {
                                 await ReminderModel.deleteById(reminder.id);
-                                console.log(chalk.green(`✅ [SCHEDULER] Lembrete #${reminder.id} enviado e removido.`));
+                                console.log(chalk.green(`✅ [SCHEDULER FALLBACK] Lembrete #${reminder.id} enviado e removido.`));
                             } else {
                                 console.log(chalk.red(`❌ [SCHEDULER] Falha ao enviar lembrete #${reminder.id}. Mantendo no banco para nova tentativa.`));
                             }
                             
                         } catch (err) {
                             console.error(`Falha ao disparar lembrete #${reminder.id}:`, err.message);
-                            // Se falhar, o lembrete continua no banco para tentar no próximo minuto
                         }
+                    }
+                    if (enviouAlgo) {
+                        console.log(`Rotina do scheduler concluída.`);
                     }
                 }
             } catch (error) {
